@@ -3,15 +3,36 @@
 
 import AVFoundation
 
+#if os(macOS)
 import Cocoa
+#elseif os(iOS)
+import UIKit
+#endif
+
 import SwiftUI
 
+///
 public protocol WPKWallpaper {
     associatedtype Project: WPKProject
     
     var project: Project { get }
 }
 
+extension WPKWallpaper {
+    func write(to url: URL, options: Data.WritingOptions = []) throws {
+        do {
+            let projectData = try JSONEncoder().encode(project)
+            try projectData.write(to: url, options: options)
+            if project is WPKEngineProjectCompatible {
+                
+            }
+        } catch {
+            throw error
+        }
+    }
+}
+
+///
 public protocol WPKProject: Codable {
     
 }
@@ -44,12 +65,18 @@ public enum WPKWallpaperType: String, Codable {
     /// Wallpapers that represents a video on the desktop.
     case video
     
+    /// Wallpapers that represents a website on the desktop.
+    case web
+    
     /// Wallpapers that represents advanced, mixed scenes on the desktop.
     case mixed
 }
 
 /// A type for wallpapers in Wallpaper Engine©.
 public enum WPKWallpaperEngineType: String, Codable {
+    
+    /// Wallpapers in Wallpaper Engine© that represents a image on the desktop
+    case image
     
     /// Wallpapers in Wallpaper Engine© that represents a photo on the desktop
     case video
@@ -93,7 +120,7 @@ public struct WPKEngineProject: Codable {
     
     /// Title property in project.json
     public var tags: [String]?
-   
+    
     /// Title property in project.json
     public var visibility: String?
     
@@ -116,18 +143,64 @@ public struct WPKEngineProject: Codable {
 }
 
 public protocol WPKResource {
+    associatedtype Project: WPKResourceProject
+    
+    /// A model representation of this object', which usually been used for JSON encoding / decoding
+    var project: Project { get }
+}
+
+public protocol WPKResourceProject: Codable {
     
 }
 
-public struct WPKPhoto: WPKResource {
+public struct WPKPhotoResourceProject: WPKResourceProject {
+    var photos: [Photo]
+    
+    public struct Photo: Codable {
+        var name: String
+        var md5: String
+    }
+}
+
+public struct WPKVideoResourceProject: WPKResourceProject {
+    var videos: [Video]
+    
+    public struct Video: Codable {
+        var name: String
+        var md5: String
+    }
+}
+
+public struct WPKMixedResourceProject: WPKResourceProject {
     
 }
 
-public protocol WPKLegacyProjectRepresenable: WPKWallpaper where Project: WPKEngineProjectCompatible {
+/// A unified file resources for photo type wallpapers
+public struct WPKPhotoResource: WPKResource {
+    var photos: [FileWrapper]
+    
+    /// A model representation of this object', which usually been used for JSON encoding / decoding
+    public var project: WPKPhotoResourceProject
+}
+
+/// A unified file resources for video type wallpapers
+public struct WPKVideoResource: WPKResource {
+    var videos: [FileWrapper]
+    
+    public var project: WPKVideoResourceProject
+}
+
+/// A unified file resources for mixed type wallpapers
+public struct WPKMixedResource: WPKResource {
+    public var project: WPKMixedResourceProject { .init() }
+}
+
+/// A wrapper for a WallpaperKit wallpaper that you use to be compatible with Wallpaper Engine©
+public protocol WPKLegacyWallpaperRepresenable: WPKWallpaper where Project: WPKEngineProjectCompatible {
     var projectLegacy: WPKEngineProject { get }
 }
 
-public struct WPKPhotoWallpaper: WPKLegacyProjectRepresenable {
+public struct WPKPhotoWallpaper: WPKLegacyWallpaperRepresenable {
     private(set) public var project: WPKPhotoWallpaperProject
     public var projectLegacy: WPKEngineProject { WPKEngineProject(project) }
     
@@ -136,26 +209,23 @@ public struct WPKPhotoWallpaper: WPKLegacyProjectRepresenable {
     }
 }
 
+/// A wallpaper that represents a photo on the desktop.
 public struct WPKPhotoWallpaperProject: WPKProject, WPKEngineProjectCompatible {
-    public var legacyPreview: String {
-        ""
-    }
     
-    public var legacyTitle: String {
-        ""
-    }
+    public var title: String = ""
+    public var preview: String = ""
+    public var desceiption: String?
     
-    public var legacyDescription: String? {
-        nil
-    }
+    /// Preview property for project convention
+    public var legacyPreview: String { preview }
     
-    public var legacyVersion: Int? {
-        nil
-    }
+    public var legacyTitle: String { title }
     
-    public var legacyType: WPKWallpaperEngineType {
-        .video
-    }
+    public var legacyDescription: String? { desceiption }
+    
+    public var legacyVersion: Int? { 0 }
+    
+    public var legacyType: WPKWallpaperEngineType { .image }
 }
 
 public struct WPKVideoWallpaper: WPKWallpaper {
@@ -174,78 +244,8 @@ public struct WPKMixedWallpaperProject: WPKProject {
     
 }
 
-//public protocol WPKProjecta: Codable where Resource: WPKResource {
-//    associatedtype Resource
-//    
-//    var title: String { get set }
-//    var author: WPKProjectAuthor { get set }
-//    var type: `Type` { get set }
-//    var version: Int { get set }
-//    var resources: Resource { get set }
-//    
-//    // Optional
-//    var tags: [String]? { get set }
-//}
-//
-//public struct WPKPhotoProject: WPKProject {
-//    public typealias Resource = <#type#>
-//    
-//    public var title: String
-//    
-//    public var author: WPKProjectAuthor
-//    
-//    public var type: WPKProject.`Type`
-//    
-//    public var version: Int
-//    
-//    public var tags: [String]?
-//    
-//    
-//}
-
 public struct WPKProjectAuthor: Codable {
     
-}
-
-//public struct WPKProjecta<Resource>: Codable where Resource: WPKResource {
-//    // Must have
-//    public var title: String
-//    public var author: Author
-//    public var type: `Type`
-//    public var version: Int
-//    public var resources: Resource
-//    
-//    // Optional
-//    public var tags: [String]?
-//}
-//
-//public protocol WPKResource: Codable { }
-//
-//public extension WPKProject {
-//    struct Author: Codable {
-//        public var name: String
-//        public var link: String
-//        public var description: String?
-//    }
-//}
-//
-//public extension WPKProject {
-//    struct Property: Codable {
-//        
-//    }
-//}
-//
-//public extension WPKProject {
-//    enum `Type`: String, Codable {
-//        case photo, video, mixed
-//    }
-//}
-
-
-class WPKManager {
-    init() async {
-        
-    }
 }
 
 public protocol WPKResourcea {
@@ -253,29 +253,7 @@ public protocol WPKResourcea {
     func removeResource(_ name: String) throws
 }
 
-/// Wallpaper Protocol
-public protocol _WPKWallpaper where Resource: _WPKResource, Project: _WPKProject {
-    associatedtype Resource
-    associatedtype Project
-    
-    var resource: Resource { get }
-    var project: Project { get }
-}
-
-/// Wallpaper Protocol
-public protocol _WPKResource {
-    func find() -> any StringProtocol
-}
-
-/// Wallpaper Protocol
-public protocol _WPKProject: Codable, Equatable, Hashable {
-    var title: String { get set }
-    var preview: String? { get set }
-    var type: String { get set }
-    var tags: [String]? { get set }
-}
-
-struct WPEngineProject: _WPKProject {
+struct WPEngineProject {
     var approved: Bool?
     var contentrating: String?
     var description: String?
@@ -291,34 +269,9 @@ struct WPEngineProject: _WPKProject {
     var version: Int?
 }
 
-protocol WPKWallpapera where Project: Codable, Flag: OptionSet {
-    associatedtype Project
-    associatedtype Flag
-    
-    var project: Project { get }
-    
-    init(contentOf url: URL, flags: Flag) throws
-    
-    func setSaveURL(_ url: URL)
-    
-    
-}
-
-extension WPKWallpapera {
-    
-}
-
-struct Flag: OptionSet {
-    var rawValue: Int
-    
-    static let overwrite: Self = Self.init(rawValue: 1 << 0)
-}
-
 enum WPKError: Error {
     case wrongType
 }
-
-
 
 struct WEProjectPropertyOption: Codable, Equatable, Hashable {
     var label: String
@@ -374,7 +327,8 @@ enum WorkshopId: Codable, Equatable, Hashable, RawRepresentable {
             self = .string(x)
             return
         }
-        throw DecodingError.typeMismatch(Self.self, DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Wrong type for Workshop ID"))
+        throw DecodingError.typeMismatch(Self.self, DecodingError.Context(codingPath: decoder.codingPath,
+                                                                          debugDescription: "Wrong type for Workshop ID"))
     }
     
     func encode(to encoder: Encoder) throws {
@@ -388,62 +342,62 @@ enum WorkshopId: Codable, Equatable, Hashable, RawRepresentable {
     }
 }
 
-struct WEWallpaper: Codable, RawRepresentable, Identifiable {
-    
-    var id: Int { self.project.hashValue }
-    var rawValue: String {
-        do {
-            let rawValueData = try JSONEncoder().encode(self)
-            return String(data: rawValueData, encoding: .utf8)!
-        } catch {
-            print(error)
-            return ""
-        }
-    }
-    
-    var wallpaperDirectory: URL
-    var project: WPEngineProject
-    
-    var wallpaperSize: Int {
-        guard let sizeBytes = try? self.wallpaperDirectory.directoryTotalAllocatedSize(includingSubfolders: true)
-        else { return 0 }
-        return sizeBytes
-    }
-    
-    init(using project: WPEngineProject, where url: URL) {
-        self.wallpaperDirectory = url
-        self.project = project
-    }
-    
-    enum CodingKeys: CodingKey {
-        case wallpaperDirectory
-        case project
-        // <all the other elements too>
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.wallpaperDirectory = try container.decode(URL.self, forKey: .wallpaperDirectory)
-        self.project = try container.decode(WPEngineProject.self, forKey: .project)
-        // <and so on>
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(wallpaperDirectory, forKey: .wallpaperDirectory)
-        try container.encode(project, forKey: .project)
-        // <and so on>
-    }
-    
-    init?(rawValue: String) {
-        if let rawValueData = rawValue.data(using: .utf8),
-           let wallpaper = try? JSONDecoder().decode(WEWallpaper.self, from: rawValueData) {
-            self = wallpaper
-        } else {
-            return nil
-        }
-    }
-}
+//struct WEWallpaper: Codable, RawRepresentable, Identifiable {
+//
+//    var id: Int { self.project.hashValue }
+//    var rawValue: String {
+//        do {
+//            let rawValueData = try JSONEncoder().encode(self)
+//            return String(data: rawValueData, encoding: .utf8)!
+//        } catch {
+//            print(error)
+//            return ""
+//        }
+//    }
+//
+//    var wallpaperDirectory: URL
+//    var project: WPEngineProject
+//
+//    var wallpaperSize: Int {
+//        guard let sizeBytes = try? self.wallpaperDirectory.directoryTotalAllocatedSize(includingSubfolders: true)
+//        else { return 0 }
+//        return sizeBytes
+//    }
+//
+//    init(using project: WPEngineProject, where url: URL) {
+//        self.wallpaperDirectory = url
+//        self.project = project
+//    }
+//
+//    enum CodingKeys: CodingKey {
+//        case wallpaperDirectory
+//        case project
+//        // <all the other elements too>
+//    }
+//
+//    init(from decoder: Decoder) throws {
+//        let container = try decoder.container(keyedBy: CodingKeys.self)
+//        self.wallpaperDirectory = try container.decode(URL.self, forKey: .wallpaperDirectory)
+//        self.project = try container.decode(WPEngineProject.self, forKey: .project)
+//        // <and so on>
+//    }
+//
+//    func encode(to encoder: Encoder) throws {
+//        var container = encoder.container(keyedBy: CodingKeys.self)
+//        try container.encode(wallpaperDirectory, forKey: .wallpaperDirectory)
+//        try container.encode(project, forKey: .project)
+//        // <and so on>
+//    }
+//
+//    init?(rawValue: String) {
+//        if let rawValueData = rawValue.data(using: .utf8),
+//           let wallpaper = try? JSONDecoder().decode(WEWallpaper.self, from: rawValueData) {
+//            self = wallpaper
+//        } else {
+//            return nil
+//        }
+//    }
+//}
 
 enum WEWallpaperSortingMethod: String, CaseIterable, Identifiable {
     
@@ -451,10 +405,10 @@ enum WEWallpaperSortingMethod: String, CaseIterable, Identifiable {
     
     case name = "Name"
     case rating = "Rating"
-//    case favorite = "Favorite"
+    //    case favorite = "Favorite"
     case fileSize = "File Size"
-//    case subDate = "Subscription Date"
-//    case lastUpdated = "Last Updated"
+    //    case subDate = "Subscription Date"
+    //    case lastUpdated = "Last Updated"
 }
 
 enum WEWallpaperSortingSequence: Int {
@@ -488,7 +442,7 @@ extension URL {
         }
         return try checkResourceIsReachable()
     }
-
+    
     /// returns total allocated size of a the directory including its subFolders or not
     func directoryTotalAllocatedSize(includingSubfolders: Bool = false) throws -> Int? {
         guard try isDirectoryAndReachable() else { return nil }
@@ -496,12 +450,12 @@ extension URL {
             guard
                 let urls = FileManager.default.enumerator(at: self, includingPropertiesForKeys: nil)?.allObjects as? [URL] else { return nil }
             return try urls.lazy.reduce(0) {
-                    (try $1.resourceValues(forKeys: [.totalFileAllocatedSizeKey]).totalFileAllocatedSize ?? 0) + $0
+                (try $1.resourceValues(forKeys: [.totalFileAllocatedSizeKey]).totalFileAllocatedSize ?? 0) + $0
             }
         }
         return try FileManager.default.contentsOfDirectory(at: self, includingPropertiesForKeys: nil).lazy.reduce(0) {
-                 (try $1.resourceValues(forKeys: [.totalFileAllocatedSizeKey])
-                    .totalFileAllocatedSize ?? 0) + $0
+            (try $1.resourceValues(forKeys: [.totalFileAllocatedSizeKey])
+                .totalFileAllocatedSize ?? 0) + $0
         }
     }
 }
