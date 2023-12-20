@@ -10,12 +10,27 @@ import UIKit
 #endif
 
 import SwiftUI
+import Combine
+
+public protocol WPKWallpaperManager: ObservableObject {
+    associatedtype Wallpaper: WPKWallpaper
+    
+    var wallpaper: Wallpaper { get set }
+}
 
 ///
 public protocol WPKWallpaper {
     associatedtype Project: WPKProject
+    associatedtype V: View
     
     var project: Project { get }
+    
+    var view: V { get }
+}
+
+extension WPKWallpaper {
+    /// Default implementation (an empty wallpaper view)
+    public var view: some View { EmptyWallpaperView() }
 }
 
 extension WPKWallpaper {
@@ -32,7 +47,6 @@ extension WPKWallpaper {
     }
 }
 
-///
 public protocol WPKProject: Codable {
     
 }
@@ -175,14 +189,6 @@ public struct WPKMixedResourceProject: WPKResourceProject {
     
 }
 
-/// A unified file resources for photo type wallpapers
-public struct WPKPhotoResource: WPKResource {
-    var photos: [FileWrapper]
-    
-    /// A model representation of this object', which usually been used for JSON encoding / decoding
-    public var project: WPKPhotoResourceProject
-}
-
 /// A unified file resources for video type wallpapers
 public struct WPKVideoResource: WPKResource {
     var videos: [FileWrapper]
@@ -200,36 +206,214 @@ public protocol WPKLegacyWallpaperRepresenable: WPKWallpaper where Project: WPKE
     var projectLegacy: WPKEngineProject { get }
 }
 
-public struct WPKPhotoWallpaper: WPKLegacyWallpaperRepresenable {
-    private(set) public var project: WPKPhotoWallpaperProject
-    public var projectLegacy: WPKEngineProject { WPKEngineProject(project) }
-    
-    init() {
-        self.project = Project()
+public struct ResourceFile: Codable {
+    var name: String
+    var md5: String
+}
+
+//public struct WPKVideoWallpaper: WPKWallpaper {
+//    private(set) public var project: WPKVideoWallpaperProject
+//}
+
+
+/// Types that being used for passing through informations for being rendered & displaying.
+public enum Passthrough {
+    public struct Wallpaper {
+        var title: String
+        var preview: String?
+        var type: WPKWallpaperType
+        var author: String
+        var tags: [String]
+        var file: String
+        
+        var speed: Double
+        var volume: Double
+        
+        var isBundled: Bool
+        
+        static let test = Wallpaper(title: "Test Wallpaper", 
+                                    preview: nil, type: .video,
+                                    author: "nobody",
+                                    tags: ["test"],
+                                    file: "",
+                                    speed: 1.0,
+                                    volume: 1.0,
+                                    isBundled: false)
     }
 }
 
-/// A wallpaper that represents a photo on the desktop.
-public struct WPKPhotoWallpaperProject: WPKProject, WPKEngineProjectCompatible {
+/// Types that mostly conforms to Codable protocol to save models into local storage
+public enum Storage {
+    public struct Project: Codable {
+        
+    }
     
-    public var title: String = ""
-    public var preview: String = ""
-    public var desceiption: String?
+    public struct WPEngineProject: Codable {
+        var approved: Bool?
+        var contentrating: String?
+        var description: String?
+        var file: String
+        var general: WEProjectGeneral?
+        var preview: String?
+        var tags: [String]?
+        var title: String
+        var visibility: String?
+        var workshopid: WorkshopId?
+        var workshopurl: String?
+        var type: String
+        var version: Int?
+    }
     
-    /// Preview property for project convention
-    public var legacyPreview: String { preview }
-    
-    public var legacyTitle: String { title }
-    
-    public var legacyDescription: String? { desceiption }
-    
-    public var legacyVersion: Int? { 0 }
-    
-    public var legacyType: WPKWallpaperEngineType { .image }
+    public struct PropertyOption: Codable {
+        public var label: String
+        public var value: String
+    }
+
+    public struct Property: Codable {
+        // optional
+        public var condition: String?
+        public var index: Int?
+        public var options: [PropertyOption]?
+        public var order: Int?
+        
+        // must have
+        public var text: String
+        public var type: String
+        public var value: String
+    }
+
+    public struct Properties: Codable {
+        public var schemecolor: Property?
+    }
+
+    public struct General: Codable {
+        public var properties: Properties
+    }
+
+    public enum WorkshopId: Codable {
+        case int(Int)
+        case string(String)
+        
+        var rawValue: String {
+            switch self {
+            case .int(let x):
+                return String(x)
+            case .string(let x):
+                return x
+            }
+        }
+        
+        init?(rawValue: String) {
+            guard rawValue.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
+            self = .string(rawValue)
+        }
+        
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            if let x = try? container.decode(Int.self) {
+                self = .int(x)
+                return
+            }
+            if let x = try? container.decode(String.self) {
+                self = .string(x)
+                return
+            }
+            throw DecodingError.typeMismatch(Self.self, DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Wrong type for Workshop ID"))
+        }
+        
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            switch self {
+            case .int(let x):
+                try container.encode(x)
+            case .string(let x):
+                try container.encode(x)
+            }
+        }
+    }
+
+    public struct WEProjectPropertyOption: Codable, Equatable, Hashable {
+        var label: String
+        var value: String
+    }
+
+    public struct WEProjectProperty: Codable, Equatable, Hashable {
+        // optional
+        var condition: String?
+        var index: Int?
+        var options: [WEProjectPropertyOption]?
+        var order: Int?
+        
+        // must have
+        var text: String
+        var type: String
+        var value: String
+    }
+
+    public struct WEProjectProperties: Codable, Equatable, Hashable {
+        var schemecolor: WEProjectProperty?
+    }
+
+    public struct WEProjectGeneral: Codable, Equatable, Hashable {
+        var properties: WEProjectProperties
+    }
 }
 
-public struct WPKVideoWallpaper: WPKWallpaper {
-    private(set) public var project: WPKVideoWallpaperProject
+public protocol Wallpaper: ObservableObject {
+    var wallpaper: Passthrough.Wallpaper { get }
+    
+    var bundleURL: URL? { get }
+    
+    init(fileURL: URL)
+    
+    init(contentsOf: URL)
+    
+    func saveProperties() throws
+}
+
+public final class VideoWallpaper {
+    public var bundleURL: URL?
+    
+    private var cancellable = Set<AnyCancellable>()
+    
+    public func saveProperties() throws {
+        if isBundled {
+            
+        } else {
+            throw WPKError.notBundled
+        }
+    }
+    
+//    @Published public private(set) var wallpaper: Passthrough.Wallpaper
+    
+    @Published public var title: String
+    @Published public var file: String
+    
+    public private(set) var isBundled: Bool
+    
+    public var player: AVPlayer?
+    
+    public init(contentsOf bundleURL: URL) throws {
+        self.bundleURL = bundleURL
+        self.isBundled = true
+        
+        let projectData = try Data(contentsOf: bundleURL.appending(path: "project.json"))
+        let project = try JSONDecoder().decode(Storage.WPEngineProject.self, from: projectData)
+        
+        self.title = project.title
+        self.file = project.file
+        
+//        self.wallpaper = .test
+//        self.wallpaper.isBundled = true
+        
+        
+    }
+    
+    public init(fileURL: URL) {
+//        self.wallpaper = .test
+//        self.wallpaper.isBundled = false
+        self.isBundled = false
+    }
 }
 
 public struct WPKVideoWallpaperProject: WPKProject {
@@ -245,217 +429,11 @@ public struct WPKMixedWallpaperProject: WPKProject {
 }
 
 public struct WPKProjectAuthor: Codable {
-    
-}
-
-public protocol WPKResourcea {
-    func addResource(_ data: Data, with name: String) throws
-    func removeResource(_ name: String) throws
-}
-
-struct WPEngineProject {
-    var approved: Bool?
-    var contentrating: String?
+    var name: String
+    var avator: String?
     var description: String?
-    var file: String
-    var general: WEProjectGeneral?
-    var preview: String?
-    var tags: [String]?
-    var title: String
-    var visibility: String?
-    var workshopid: WorkshopId?
-    var workshopurl: String?
-    var type: String
-    var version: Int?
 }
 
 enum WPKError: Error {
-    case wrongType
-}
-
-struct WEProjectPropertyOption: Codable, Equatable, Hashable {
-    var label: String
-    var value: String
-}
-
-struct WEProjectProperty: Codable, Equatable, Hashable {
-    // optional
-    var condition: String?
-    var index: Int?
-    var options: [WEProjectPropertyOption]?
-    var order: Int?
-    
-    // must have
-    var text: String
-    var type: String
-    var value: String
-}
-
-struct WEProjectProperties: Codable, Equatable, Hashable {
-    var schemecolor: WEProjectProperty?
-}
-
-struct WEProjectGeneral: Codable, Equatable, Hashable {
-    var properties: WEProjectProperties
-}
-
-enum WorkshopId: Codable, Equatable, Hashable, RawRepresentable {
-    case int(Int)
-    case string(String)
-    
-    var rawValue: String {
-        switch self {
-        case .int(let x):
-            return String(x)
-        case .string(let x):
-            return x
-        }
-    }
-    
-    init?(rawValue: String) {
-        guard rawValue.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
-        self = .string(rawValue)
-    }
-    
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let x = try? container.decode(Int.self) {
-            self = .int(x)
-            return
-        }
-        if let x = try? container.decode(String.self) {
-            self = .string(x)
-            return
-        }
-        throw DecodingError.typeMismatch(Self.self, DecodingError.Context(codingPath: decoder.codingPath,
-                                                                          debugDescription: "Wrong type for Workshop ID"))
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .int(let x):
-            try container.encode(x)
-        case .string(let x):
-            try container.encode(x)
-        }
-    }
-}
-
-//struct WEWallpaper: Codable, RawRepresentable, Identifiable {
-//
-//    var id: Int { self.project.hashValue }
-//    var rawValue: String {
-//        do {
-//            let rawValueData = try JSONEncoder().encode(self)
-//            return String(data: rawValueData, encoding: .utf8)!
-//        } catch {
-//            print(error)
-//            return ""
-//        }
-//    }
-//
-//    var wallpaperDirectory: URL
-//    var project: WPEngineProject
-//
-//    var wallpaperSize: Int {
-//        guard let sizeBytes = try? self.wallpaperDirectory.directoryTotalAllocatedSize(includingSubfolders: true)
-//        else { return 0 }
-//        return sizeBytes
-//    }
-//
-//    init(using project: WPEngineProject, where url: URL) {
-//        self.wallpaperDirectory = url
-//        self.project = project
-//    }
-//
-//    enum CodingKeys: CodingKey {
-//        case wallpaperDirectory
-//        case project
-//        // <all the other elements too>
-//    }
-//
-//    init(from decoder: Decoder) throws {
-//        let container = try decoder.container(keyedBy: CodingKeys.self)
-//        self.wallpaperDirectory = try container.decode(URL.self, forKey: .wallpaperDirectory)
-//        self.project = try container.decode(WPEngineProject.self, forKey: .project)
-//        // <and so on>
-//    }
-//
-//    func encode(to encoder: Encoder) throws {
-//        var container = encoder.container(keyedBy: CodingKeys.self)
-//        try container.encode(wallpaperDirectory, forKey: .wallpaperDirectory)
-//        try container.encode(project, forKey: .project)
-//        // <and so on>
-//    }
-//
-//    init?(rawValue: String) {
-//        if let rawValueData = rawValue.data(using: .utf8),
-//           let wallpaper = try? JSONDecoder().decode(WEWallpaper.self, from: rawValueData) {
-//            self = wallpaper
-//        } else {
-//            return nil
-//        }
-//    }
-//}
-
-enum WEWallpaperSortingMethod: String, CaseIterable, Identifiable {
-    
-    var id: Self { self }
-    
-    case name = "Name"
-    case rating = "Rating"
-    //    case favorite = "Favorite"
-    case fileSize = "File Size"
-    //    case subDate = "Subscription Date"
-    //    case lastUpdated = "Last Updated"
-}
-
-enum WEWallpaperSortingSequence: Int {
-    case decrease = 0, increase = 1
-}
-
-enum WEInitError: Error {
-    enum WEJSONProjectInitError: Error {
-        case notFound, corrupted, mismatched, unkownError
-    }
-    
-    enum WEResourcesInitError: Error {
-        case notFound, mismatchedFormat, corrupted, unkownError
-    }
-    
-    enum WEPreviewInitError: Error {
-        case notFound, notImage, unkownError
-    }
-    
-    case badDirectoryPath
-    case JSONProject(was: WEJSONProjectInitError)
-    case resources(was: WEResourcesInitError)
-    case preview(was: WEPreviewInitError)
-}
-
-extension URL {
-    /// check if the URL is a directory and if it is reachable
-    func isDirectoryAndReachable() throws -> Bool {
-        guard try resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true else {
-            return false
-        }
-        return try checkResourceIsReachable()
-    }
-    
-    /// returns total allocated size of a the directory including its subFolders or not
-    func directoryTotalAllocatedSize(includingSubfolders: Bool = false) throws -> Int? {
-        guard try isDirectoryAndReachable() else { return nil }
-        if includingSubfolders {
-            guard
-                let urls = FileManager.default.enumerator(at: self, includingPropertiesForKeys: nil)?.allObjects as? [URL] else { return nil }
-            return try urls.lazy.reduce(0) {
-                (try $1.resourceValues(forKeys: [.totalFileAllocatedSizeKey]).totalFileAllocatedSize ?? 0) + $0
-            }
-        }
-        return try FileManager.default.contentsOfDirectory(at: self, includingPropertiesForKeys: nil).lazy.reduce(0) {
-            (try $1.resourceValues(forKeys: [.totalFileAllocatedSizeKey])
-                .totalFileAllocatedSize ?? 0) + $0
-        }
-    }
+    case wrongType, notBundled
 }
