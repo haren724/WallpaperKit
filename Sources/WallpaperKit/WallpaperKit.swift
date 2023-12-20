@@ -146,6 +146,8 @@ public final class VideoWallpaper: Wallpaper {
         NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)
             .sink { [weak self] _ in
                 self?.player.seek(to: .zero)
+                guard let speed = self?.speed else { return }
+                self?.player.play()
             }.store(in: &cancellable)
     }
     
