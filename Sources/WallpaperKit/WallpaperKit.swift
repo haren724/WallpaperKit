@@ -142,6 +142,11 @@ public final class VideoWallpaper: Wallpaper {
         $speed.sink { [weak self] newSpeed in
             self?.player.rate = Float(newSpeed)
         }.store(in: &cancellable)
+        
+        NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)
+            .sink { [weak self] _ in
+                self?.player.seek(to: .zero)
+            }.store(in: &cancellable)
     }
     
 //    public init(fileURL: URL) {
