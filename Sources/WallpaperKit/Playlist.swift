@@ -6,8 +6,3 @@
 //
 
 import Foundation
-
-struct Playlist: Codable {
-    var title: String
-    var author: Author?
-}
