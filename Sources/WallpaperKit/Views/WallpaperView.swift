@@ -4,12 +4,14 @@
 //
 //  Created by Haren on 2023/10/30.
 //
+
+import Combine
 import Cocoa
 import SwiftUI
 import AVKit
 
 @available(macOS, introduced: 13.0)
-struct GifImage: NSViewRepresentable {
+struct AnimatedImage: NSViewRepresentable {
     
     var gifName: String?
     var gifUrl: URL?
@@ -110,83 +112,6 @@ struct GifImage: NSViewRepresentable {
     }
 }
 
-
-struct VideoWallpaperInspector: View {
-    
-    @ObservedObject var wallpaper: VideoWallpaper
-    
-    @State private var saveDate: Date?
-    
-    var body: some View {
-        Form {
-            GifImage(contentsOf: wallpaper.bundleURL.appending(path: "preview.gif"), animates: true)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-            Text(wallpaper.title)
-                .frame(maxWidth: .infinity)
-                .textSelection(.enabled)
-            Section("General") {
-                Slider(value: $wallpaper.speed, in: 0.25...2, step: 0.25) {
-                    Text("Playback Speed")
-                    Text(String(format: "%.2f", wallpaper.speed) + "x")
-                } minimumValueLabel: {
-                    Image(systemName: "tortoise.fill")
-                        .font(.system(size: 10))
-                } maximumValueLabel: {
-                    Image(systemName: "hare.fill")
-                        .font(.system(size: 10))
-                }
-                
-                Slider(value: $wallpaper.volume, in: 0...1) {
-                    Text("Volume")
-                    Text(String(format: "%.0f", wallpaper.volume * 100) + "%")
-                } minimumValueLabel: {
-                    Image(systemName: "speaker.minus.fill")
-                        .font(.system(size: 10))
-                } maximumValueLabel: {
-                    Image(systemName: "speaker.plus.fill")
-                        .font(.system(size: 10))
-                }
-                
-                Slider(value: $wallpaper.size, in: 0.5...5, step: 0.5) {
-                    Text("Size")
-                    Text(String(format: "%.1f", wallpaper.size) + "x")
-                } minimumValueLabel: {
-                    Image(systemName: "arrow.up.forward.and.arrow.down.backward")
-                        .font(.system(size: 10))
-                } maximumValueLabel: {
-                    Image(systemName: "arrow.up.backward.and.arrow.down.forward")
-                        .font(.system(size: 10))
-                }
-            }
-            
-            Section {
-                HStack {
-                    Text("""
-                         Last Saved:
-                         \(saveDate == nil ? "None" : saveDate!.formatted())
-                         """)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Button { 
-                        try! wallpaper.saveProperties()
-                        saveDate = .now
-                    } label: {
-                        Text("Save").frame(width: 80)
-                    }.buttonStyle(.borderedProminent)
-                }
-                
-            }
-        }.formStyle(.grouped)
-    }
-}
-
-//protocol WallpaperView: View {
-//    associatedtype W: Wallpaper
-//    
-//    var wallpaper: W { get }
-//}
-
 public struct WallpaperView<W: Wallpaper>: View {
     
     @ObservedObject var wallpaper: W
@@ -197,7 +122,7 @@ public struct WallpaperView<W: Wallpaper>: View {
     
     public var body: some View {
         if let wallpaper = wallpaper as? VideoWallpaper {
-            VideoPlayer(player: wallpaper.player)
+            VideoWallpaperView(wallpaper: wallpaper)
         } else {
             Text("Unsupported Wallpaper Type.")
         }

@@ -7,8 +7,8 @@
 
 import Foundation
 
-public extension Storage {
-    public struct WPEngineProject: Codable {
+public extension WallpaperEngine {
+    struct Project: Codable {
         var approved: Bool?
         var contentrating: String?
         var description: String?
@@ -24,12 +24,12 @@ public extension Storage {
         var version: Int?
     }
     
-    public struct PropertyOption: Codable {
+    struct PropertyOption: Codable {
         public var label: String
         public var value: String
     }
 
-    public struct Property: Codable {
+    struct Property: Codable {
         // optional
         public var condition: String?
         public var index: Int?
@@ -42,15 +42,15 @@ public extension Storage {
         public var value: String
     }
 
-    public struct Properties: Codable {
+    struct Properties: Codable {
         public var schemecolor: Property?
     }
 
-    public struct General: Codable {
+    struct General: Codable {
         public var properties: Properties
     }
 
-    public enum WorkshopId: Codable {
+    enum WorkshopId: Codable {
         case int(Int)
         case string(String)
         

@@ -85,3 +85,11 @@ struct Author {
 
 
 
+## Thoughts
+
+Imagine wallpapers in house decoration. It's generally a cloth like paper with some nice looking patterns on it. Inspired by this, I'd like to implement `Wallpaper` as structures, which can be decorated by some reference types (Class). But what about these classes? How large files like video files or scene.pkg files are properly stored?
+
+
+
+
+
