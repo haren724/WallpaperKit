@@ -30,7 +30,7 @@ public final class WallpaperWindowController<W: Wallpaper>: NSWindowController {
                               backing: .buffered,
                               defer: false)
         
-        // Adjust window level in case it can stay at desktop image layer
+        // Adjust window level so that it can stay at desktop image layer
         window.level = .init(Int(CGWindowLevelForKey(.desktopWindow)))
         
         // Avoid being collasped when using mission control
@@ -42,7 +42,7 @@ public final class WallpaperWindowController<W: Wallpaper>: NSWindowController {
         // We don't need a window title
         window.titleVisibility = .hidden
         
-        // And also can't be hidden
+        // And also it can't be hidden
         window.canHide = false
         
         self.window = window

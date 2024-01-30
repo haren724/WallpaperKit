@@ -92,12 +92,12 @@ public extension WallpaperEngine {
         }
     }
 
-    public struct WEProjectPropertyOption: Codable, Equatable, Hashable {
+    struct WEProjectPropertyOption: Codable, Equatable, Hashable {
         var label: String
         var value: String
     }
 
-    public struct WEProjectProperty: Codable, Equatable, Hashable {
+    struct WEProjectProperty: Codable, Equatable, Hashable {
         // optional
         var condition: String?
         var index: Int?
@@ -110,11 +110,11 @@ public extension WallpaperEngine {
         var value: String
     }
 
-    public struct WEProjectProperties: Codable, Equatable, Hashable {
+    struct WEProjectProperties: Codable, Equatable, Hashable {
         var schemecolor: WEProjectProperty?
     }
 
-    public struct WEProjectGeneral: Codable, Equatable, Hashable {
+    struct WEProjectGeneral: Codable, Equatable, Hashable {
         var properties: WEProjectProperties
     }
 }

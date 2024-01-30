@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "WallpaperKit",
-    platforms: [.iOS(.v17), .macOS(.v13)],
+    platforms: [.macOS(.v13)],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
@@ -17,8 +17,23 @@ let package = Package(
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "WallpaperKit"),
+        .target(
+            name: "Common", dependencies: ["WallpaperKit"], path: "Tests/Common"),
         .testTarget(
             name: "WallpaperKitTests",
-            dependencies: ["WallpaperKit"]),
+            dependencies: ["WallpaperKit", "Common"],
+            resources: []),
+        .testTarget(
+            name: "VideoWallpaperTests",
+            dependencies: ["WallpaperKit", "Common"],
+            resources: [
+                .process("Resources"),
+            ]),
+        .testTarget(
+            name: "WebWallpaperTests",
+            dependencies: ["WallpaperKit", "Common"],
+            resources: [
+                .process("Resources"),
+            ]),
     ]
 )

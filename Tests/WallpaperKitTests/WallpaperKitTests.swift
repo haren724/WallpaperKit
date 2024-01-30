@@ -34,8 +34,7 @@ final class WallpaperKitTests: XCTestCase {
 //        CGDisplayIOServicePort(<#T##CGDirectDisplayID#>)
 //        IODisplayCreateInfoDictionary(<#T##framebuffer: io_service_t##io_service_t#>, <#T##options: IOOptionBits##IOOptionBits#>)
         
-        CGDisplayMoveCursorToPoint(1, .zero)
-        
-        
+//        CGDisplayMoveCursorToPoint(1, .zero)
     }
 }
+
