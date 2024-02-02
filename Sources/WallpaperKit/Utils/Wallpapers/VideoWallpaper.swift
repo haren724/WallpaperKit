@@ -13,14 +13,14 @@ public final class VideoWallpaper: Wallpaper {
     
 //    @Published internal var __wallpaper: Models.Wallpaper
     
-    private let baseURL: URL
+    public let baseURL: URL
     
-    private let isBundled: Bool
+    public let isBundled: Bool
     
     public var bundleURL: URL? { isBundled ? baseURL : nil }
     
     public var fileURL: URL? {
-        let fileURL = baseURL.appending(path: wallpaper.file.filename)
+        let fileURL = baseURL.appending(path: wallpaper.file.name)
         if let fileData = try? Data(contentsOf: fileURL),
            fileData.hashValue == wallpaper.file.hashValue {
             return fileURL
@@ -50,7 +50,7 @@ public final class VideoWallpaper: Wallpaper {
         guard let project = try? JSONDecoder().decode(Models.Project.self, from: projectData) else { return nil }
         
         let fileURL = baseURL.appending(path: project.file)
-        let file = Models.File(filename: project.file, hashValue: try? Data(contentsOf: fileURL).hashValue)
+        let file = Models.File(name: project.file, hashValue: try? Data(contentsOf: fileURL).hashValue)
         
         self.wallpaper = Models.Wallpaper(project: project, file: file)
         
@@ -125,7 +125,7 @@ public final class VideoWallpaper: Wallpaper {
             }
             .sink { [weak self] wallpaper in
                 guard let self = self else { return }
-                self.player.replaceCurrentItem(with: .init(url: self.baseURL.appending(path: wallpaper.file.filename)))
+                self.player.replaceCurrentItem(with: .init(url: self.baseURL.appending(path: wallpaper.file.name)))
             }
             .store(in: &cancellable)
     }
@@ -151,6 +151,23 @@ public final class VideoWallpaper: Wallpaper {
         }
     }
 }
+
+//public final class SingleVideoWallpaper: SingleWallpaper {
+//    
+//    public var wallpaper: Models.Wallpaper
+//    
+//    public var fileURL: URL
+//    
+//    public init?(contentsOf url: URL) {
+//        <#code#>
+//    }
+//    
+//    public init(createAt url: URL, with wallpaper: Models.Wallpaper) throws {
+//        <#code#>
+//    }
+//    
+//    
+//}
 
 /*
 final class LegacyVideoWallpaper: Wallpaper {

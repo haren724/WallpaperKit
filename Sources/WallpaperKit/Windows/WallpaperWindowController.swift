@@ -31,7 +31,7 @@ public final class WallpaperWindowController<W: Wallpaper>: NSWindowController {
                               defer: false)
         
         // Adjust window level so that it can stay at desktop image layer
-        window.level = .init(Int(CGWindowLevelForKey(.desktopWindow)))
+        window.level = NSWindow.Level(Int(CGWindowLevelForKey(.desktopWindow)))
         
         // Avoid being collasped when using mission control
         window.collectionBehavior = .stationary

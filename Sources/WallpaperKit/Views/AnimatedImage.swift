@@ -1,14 +1,12 @@
 //
-//  WallpaperView.swift
+//  AnimatedImage.swift
 //
 //
-//  Created by Haren on 2023/10/30.
+//  Created by Haren on 2024/2/1.
 //
 
-import Combine
 import Cocoa
 import SwiftUI
-import AVKit
 
 @available(macOS, introduced: 13.0)
 struct AnimatedImage: NSViewRepresentable {

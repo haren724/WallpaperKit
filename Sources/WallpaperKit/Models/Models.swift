@@ -94,7 +94,7 @@ public extension Models {
 
 public extension Models {
     struct File: Equatable {
-        internal let filename: String
+        internal let name: String
         internal let hashValue: Int?
     }
 }
