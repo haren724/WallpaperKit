@@ -11,8 +11,6 @@ import Combine
 public final class VideoWallpaper: Wallpaper {
     @Published public var wallpaper: Models.Wallpaper
     
-//    @Published internal var __wallpaper: Models.Wallpaper
-    
     public let baseURL: URL
     
     public let isBundled: Bool

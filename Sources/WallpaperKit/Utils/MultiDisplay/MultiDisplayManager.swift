@@ -19,6 +19,24 @@ public extension Models {
     }
 }
 
+public enum Screens { }
+
+public extension Screens {
+    struct Info: Hashable, Equatable, Identifiable {
+        public var id: Int { self.hashValue }
+        
+        public var serialNumber: String
+        public var modelNumber: String
+        public var vendorNumber: String
+    }
+}
+
+public extension Screens {
+    struct Config {
+        
+    }
+}
+
 public extension Models {
     struct ScreenConfig {
         public var wallpaper: Wallpaper
@@ -30,6 +48,12 @@ public extension Models {
         }
     }
 }
+
+//public extension Models {
+//    struct MultiDisplayConfig: Codable {
+//        var 
+//    }
+//}
 
 /// - Important: Cocoa Application Only!
 public final class MultiDisplayManager {

@@ -109,20 +109,3 @@ struct AnimatedImage: NSViewRepresentable {
         return view
     }
 }
-
-public struct WallpaperView<W: Wallpaper>: View {
-    
-    @ObservedObject var wallpaper: W
-    
-    public init(wallpaper: W) {
-        self.wallpaper = wallpaper
-    }
-    
-    public var body: some View {
-        if let wallpaper = wallpaper as? VideoWallpaper {
-            VideoWallpaperView(wallpaper: wallpaper)
-        } else {
-            Text("Unsupported Wallpaper Type.")
-        }
-    }
-}

@@ -36,5 +36,28 @@ final class WallpaperKitTests: XCTestCase {
         
 //        CGDisplayMoveCursorToPoint(1, .zero)
     }
+    
+    func testDictionaryModel() throws {
+        struct Screen: Hashable, Equatable, Identifiable, Codable {
+            public var id: Int { self.hashValue }
+            
+            public var serialNumber: String
+            public var modelNumber: String
+            public var vendorNumber: String
+        }
+        
+        
+        
+        struct MultiDisplayConfig: Codable {
+            var version: Int
+            var config: [Screen: Models.ScreenConfig]
+        }
+        
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        
+        let encodedData = try encoder.encode([Screen(serialNumber: "1", modelNumber: "", vendorNumber: ""): 23, Screen(serialNumber: "", modelNumber: "", vendorNumber: ""): 13])
+        print(String(data: encodedData, encoding: .utf8)!)
+    }
 }
 

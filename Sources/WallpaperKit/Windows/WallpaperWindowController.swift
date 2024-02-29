@@ -8,6 +8,15 @@
 import Cocoa
 import SwiftUI
 
+public final class WallpaperWindow<W: Wallpaper>: NSWindow {
+    init(wallpaper: W) {
+        super.init(contentRect: .zero,
+                   styleMask: [.borderless],
+                   backing: .buffered,
+                   defer: true)
+    }
+}
+
 public final class WallpaperWindowController<W: Wallpaper>: NSWindowController {
     
     private let wallpaper: W
@@ -51,7 +60,7 @@ public final class WallpaperWindowController<W: Wallpaper>: NSWindowController {
     public override func windowDidLoad() {
         super.windowDidLoad()
         
-        contentViewController = NSHostingController(rootView: WallpaperView(wallpaper: wallpaper))
+        contentViewController = NSHostingController(rootView: WallpaperPlayer(wallpaper: wallpaper))
         
         window?.setFrame(NSRect(origin: .zero,
                                 size: CGSize(width: NSScreen.main!.visibleFrame.size.width,

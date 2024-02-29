@@ -7,6 +7,10 @@
 
 import Foundation
 
+/// A namespace storing types that mostly conforms to
+/// ``Codable`` protocol for model persistence
+public enum WallpaperEngine { }
+
 public extension WallpaperEngine {
     struct Project: Codable {
         var approved: Bool?
@@ -117,39 +121,4 @@ public extension WallpaperEngine {
     struct WEProjectGeneral: Codable, Equatable, Hashable {
         var properties: WEProjectProperties
     }
-}
-
-enum WEWallpaperSortingMethod: String, CaseIterable, Identifiable {
-    
-    var id: Self { self }
-    
-    case name = "Name"
-    case rating = "Rating"
-    //    case favorite = "Favorite"
-    case fileSize = "File Size"
-    //    case subDate = "Subscription Date"
-    //    case lastUpdated = "Last Updated"
-}
-
-enum WEWallpaperSortingSequence: Int {
-    case decrease = 0, increase = 1
-}
-
-enum WEInitError: Error {
-    enum WEJSONProjectInitError: Error {
-        case notFound, corrupted, mismatched, unkownError
-    }
-    
-    enum WEResourcesInitError: Error {
-        case notFound, mismatchedFormat, corrupted, unkownError
-    }
-    
-    enum WEPreviewInitError: Error {
-        case notFound, notImage, unkownError
-    }
-    
-    case badDirectoryPath
-    case JSONProject(was: WEJSONProjectInitError)
-    case resources(was: WEResourcesInitError)
-    case preview(was: WEPreviewInitError)
 }
