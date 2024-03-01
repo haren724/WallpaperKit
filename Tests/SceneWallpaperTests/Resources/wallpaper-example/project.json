@@ -1,0 +1,93 @@
+{
+	"contentrating" : "Everyone",
+	"description" : "Silence... Samurai Doge just wants to be happy...\n\nArt belongs to Gabriel Lopes on ArtStation. You can find him here: https://www.artstation.com/galopes\nArtwork used: https://www.artstation.com/artwork/rAGoB5\n\nMusic: Berserk - Guts' Theme:  https://youtu.be/vZa0Yh6e7dw",
+	"file" : "scene.json",
+	"general" : 
+	{
+		"properties" : 
+		{
+			"bright" : 
+			{
+				"fraction" : true,
+				"index" : 0,
+				"max" : 1,
+				"min" : 0,
+				"order" : 100,
+				"precision" : 2,
+				"step" : 0.10000000000000001,
+				"text" : "Bright",
+				"type" : "slider",
+				"value" : 0
+			},
+			"clock" : 
+			{
+				"condition" : "",
+				"index" : 3,
+				"options" : 
+				[
+					{
+						"label" : "Off",
+						"value" : "0"
+					},
+					{
+						"label" : "Top Left",
+						"value" : "1"
+					},
+					{
+						"label" : "Bottom Left",
+						"value" : "2"
+					},
+					{
+						"label" : "Top Right",
+						"value" : "3"
+					},
+					{
+						"label" : "Bottom Right",
+						"value" : "4"
+					}
+				],
+				"order" : 103,
+				"text" : "Clock",
+				"type" : "combo",
+				"value" : "0"
+			},
+			"foliage" : 
+			{
+				"index" : 1,
+				"order" : 101,
+				"text" : "Foliage Sway",
+				"type" : "bool",
+				"value" : true
+			},
+			"leafparticles" : 
+			{
+				"index" : 4,
+				"order" : 104,
+				"text" : "Leaf Particles",
+				"type" : "bool",
+				"value" : true
+			},
+			"schemecolor" : 
+			{
+				"order" : 0,
+				"text" : "ui_browse_properties_scheme_color",
+				"type" : "color",
+				"value" : "0.76471 0.39216 0.45098"
+			},
+			"tears" : 
+			{
+				"index" : 2,
+				"order" : 102,
+				"text" : "Tears Effect",
+				"type" : "bool",
+				"value" : true
+			}
+		}
+	},
+	"preview" : "preview.jpg",
+	"tags" : [ "Animal" ],
+	"title" : "Samurai Doge",
+	"type" : "scene",
+	"version" : 0,
+	"visibility" : "public"
+}

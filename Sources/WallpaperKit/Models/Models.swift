@@ -11,7 +11,7 @@ import Foundation
 public enum Models { }
 
 public extension Models {
-    struct Wallpaper: Equatable, Codable {
+    struct Wallpaper: Equatable, Encodable {
         
         internal var title: String
         
@@ -39,12 +39,8 @@ public extension Models {
             self.file = file
         }
         
-        public init(from decoder: Decoder) throws {
-            <#code#>
-        }
-        
         public func encode(to encoder: Encoder) throws {
-            <#code#>
+            
         }
     }
 }

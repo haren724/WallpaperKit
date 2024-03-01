@@ -1,0 +1,4 @@
+module Cglfw [system] {
+    header "glfw.h"
+    export *
+}

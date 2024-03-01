@@ -19,6 +19,24 @@ let package = Package(
             name: "WallpaperKit"),
         .target(
             name: "Common", dependencies: ["WallpaperKit"], path: "Tests/Common"),
+//        .systemLibrary(
+//                name: "Cglew",
+//                pkgConfig: "glew",
+//                providers: [
+//                    .brew(["glew"])
+//                ]),
+        .systemLibrary(
+                name: "Cglfw",
+                pkgConfig: "glfw3",
+                providers: [
+                    .brew(["glfw"])
+                ]),
+        .target(
+            name: "GLFWBridge",
+            dependencies: ["Cglfw"],
+            linkerSettings: [
+                .linkedFramework("OpenGL"),
+            ]),
         .testTarget(
             name: "WallpaperKitTests",
             dependencies: ["WallpaperKit", "Common"],
@@ -35,5 +53,13 @@ let package = Package(
             resources: [
                 .process("Resources"),
             ]),
+        .testTarget(
+            name: "SceneWallpaperTests",
+            dependencies: ["WallpaperKit", "Common", "GLFWBridge"],
+            resources: [
+                .process("Resources"),
+            ],
+            swiftSettings: [.interoperabilityMode(.Cxx)]),
+        
     ]
 )
