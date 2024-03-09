@@ -1,0 +1,4 @@
+module Cglm [system] {
+    header "glm.h"
+    export *
+}

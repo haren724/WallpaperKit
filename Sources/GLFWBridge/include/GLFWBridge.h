@@ -17,7 +17,7 @@
 #define GLFW_INCLUDE_GLCOREARB
 #include <GLFW/glfw3.h>
 
-void glfw_start();
+void glfw_test_start();
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 

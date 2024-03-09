@@ -12,6 +12,8 @@ import Common
 import AVFoundation
 
 import GLFWBridge
+import Cglfw
+import Cglew
 
 final class SceneWallpaperTests: XCTestCase, WallpaperTestable {
     
@@ -52,7 +54,7 @@ final class SceneWallpaperTests: XCTestCase, WallpaperTestable {
                 }
             }
             
-            var strLastIndex = strFirstIndex + length
+            let strLastIndex = strFirstIndex + length
             
             guard let filePath = String(data: pkgData[strFirstIndex..<strLastIndex], encoding: .utf8) else { break }
             
@@ -111,8 +113,176 @@ final class SceneWallpaperTests: XCTestCase, WallpaperTestable {
         player.stop()
     }
     
+    func testGLFWBridge() throws {
+        glfw_test_start()
+    }
+    
     func testGLFW() throws {
-        glfw_start()
+        var vertexBuffer: GLuint = 0
+        var vertexShader: GLuint = 0
+        var fragmentShader: GLuint = 0
+        var program: GLuint = 0
+        
+        var mvpLocation: GLint = 0
+        var vposLocation: GLint = 0
+        var vcolLocation: GLint = 0
+        
+        let __vertexShaderText = """
+        #version 110
+        uniform mat4 MVP;
+        attribute vec3 vCol;
+        attribute vec2 vPos;
+        varying vec3 color;
+        void main()
+        {
+            gl_Position = MVP * vec4(vPos, 0.0, 1.0);
+            color = vCol;
+        }
+        """
+        let _vertexShaderText = UnsafeMutablePointer<GLchar>.allocate(capacity: __vertexShaderText.count + 1)
+        _vertexShaderText.initialize(from: __vertexShaderText, count: __vertexShaderText.count + 1)
+        
+        var vertexShaderText = UnsafePointer<GLchar>?(_vertexShaderText)
+        
+        let __fragmentShaderText = """
+        #version 110
+        varying vec3 color;
+        void main()
+        {
+            gl_FragColor = vec4(color, 1.0);
+        }
+        """
+        let _fragmentShaderText = UnsafeMutablePointer<GLchar>.allocate(capacity: __fragmentShaderText.count + 1)
+        _vertexShaderText.initialize(from: __fragmentShaderText, count: __fragmentShaderText.count + 1)
+        
+        var fragmentShaderText = UnsafePointer<GLchar>?(_fragmentShaderText)
+        
+        var vertices = UnsafeMutablePointer<Vertice>.allocate(capacity: 3)
+        vertices[0] = Vertice(x: -0.6, y: -0.4, r: 1, g: 0, b: 0)
+        vertices[1] = Vertice(x: 0.6, y: -0.4, r: 0, g: 1, b: 0)
+        vertices[2] = Vertice(x: 0, y: 0.6, r: 0, g: 0, b: 1)
+        
+        glfwInit()
+        
+        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); // Collapse the window title bar
+        
+        guard let window = glfwCreateWindow(800, 600, "fjsdkjf", nil, nil)
+        else {
+            glfwTerminate()
+            XCTFail("Createing window failed!")
+            return
+        }
+        
+        glfwMakeContextCurrent(window)
+        
+        glGenBuffers(1, &vertexBuffer)
+        glBindBuffer(GLenum(GL_ARRAY_BUFFER), vertexBuffer)
+        glBufferData(GLenum(GL_ARRAY_BUFFER), MemoryLayout.size(ofValue: vertices), vertices, GLenum(GL_STATIC_DRAW))
+        
+        vertexShader = glCreateShader(GLenum(GL_VERTEX_SHADER))
+        glShaderSource(vertexShader, 1, &vertexShaderText, nil)
+        glCompileShader(vertexShader)
+        
+        fragmentShader = glCreateShader(GLenum(GL_FRAGMENT_SHADER))
+        glShaderSource(fragmentShader, 1, &fragmentShaderText, nil)
+        glCompileShader(fragmentShader)
+        
+        program = glCreateProgram()
+        glAttachShader(program, vertexShader)
+        glAttachShader(program, fragmentShader)
+        glLinkProgram(program)
+        
+        mvpLocation = glGetUniformLocation(program, "MVP")
+        vposLocation = glGetAttribLocation(program, "vPos")
+        vcolLocation = glGetAttribLocation(program, "vCol")
+        
+        
+        
+        var a: Int = 0
+        
+        glEnableVertexAttribArray(GLuint(vposLocation))
+        glVertexAttribPointer(GLuint(vposLocation), 2, GLenum(GL_FLOAT), GLboolean(GL_FALSE),
+                              GLsizei(MemoryLayout.size(ofValue: vertices[0])), UnsafeRawPointer(bitPattern: 0))
+        glEnableVertexAttribArray(GLuint(vcolLocation))
+        glVertexAttribPointer(GLuint(vcolLocation), 3, GLenum(GL_FLOAT), GLboolean(GL_FALSE),
+                              GLsizei(MemoryLayout.size(ofValue: vertices[0])), UnsafeRawPointer(bitPattern: MemoryLayout.size(ofValue: Float.self) * 2))
+        
+        while glfwWindowShouldClose(window) == 0 {
+            var ratio: Float = 0
+            var width: Int32 = 0
+            var height: Int32 = 0
+            
+//            mat4
+            
+            glfwGetFramebufferSize(window, &width, &height)
+            
+            glViewport(0, 0, width, height)
+            
+            glClear(GLbitfield(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT))
+            
+            glUseProgram(program)
+//            glUniformMatrix4fv(mvpLocation, 1, GLboolean(GL_FALSE), <#T##value: UnsafePointer<GLfloat>!##UnsafePointer<GLfloat>!#>)
+            
+            glfwSwapBuffers(window)
+            
+            glfwPollEvents()
+        }
+        
+        _vertexShaderText.deallocate()
+        vertexShaderText?.deallocate()
+        
+        _fragmentShaderText.deallocate()
+        fragmentShaderText?.deallocate()
+        
+        glfwTerminate()
+    }
+    
+    func testPlaygroundGLES() {
+        let g_vertex_buffer_data: [GLfloat] = [
+            -1.0, -1.0,  0.0,
+             1.0, -1.0,  0.0,
+             0.0,  1.0,  0.0
+        ]
+        
+        var vertexBuffer: GLuint = 0
+        
+        glfwInit()
+        
+        glewInit()
+        
+        guard let window = glfwCreateWindow(800, 600, "Triangle", nil, nil)
+        else {
+            glfwTerminate()
+            XCTFail("Createing window failed!")
+            return
+        }
+        
+        glGenBuffers(1, &vertexBuffer)
+        
+        glBindBuffer(GLenum(GL_ARRAY_BUFFER), vertexBuffer)
+        
+        glBufferData(GLenum(GL_ARRAY_BUFFER), MemoryLayout<GLuint>.size, g_vertex_buffer_data, GLenum(GL_STATIC_DRAW))
+        
+        // OpenGL ES RunLoop
+        while glfwWindowShouldClose(window) == 0 {
+            glEnableVertexAttribArray(0)
+            
+            glBindBuffer(GLenum(GL_ARRAY_BUFFER), vertexBuffer)
+            
+            var bufferOffset: GLint = 0
+            
+            glVertexAttribPointer(0, 3, GLenum(GL_FLOAT), GLboolean(GL_FALSE), 0, &bufferOffset)
+            
+            glDrawArrays(GLenum(GL_TRIANGLES), 0, 3)
+            
+            glDisableVertexAttribArray(0)
+            
+            glfwSwapBuffers(window)
+            
+            glfwPollEvents()
+        }
+        
+        glfwTerminate()
     }
     
     func testImportModel() throws {
@@ -128,5 +298,16 @@ extension SceneWallpaperTests {
         var dataLastIndex: UInt32 {
             dataFirstIndex + dataOffset
         }
+    }
+}
+
+extension SceneWallpaperTests {
+    struct Vertice {
+        var x: Float
+        var y: Float
+        
+        var r: Float
+        var g: Float
+        var b: Float
     }
 }

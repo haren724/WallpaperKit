@@ -83,6 +83,7 @@ public struct VideoWallpaperInspector: View {
                     } label: {
                         Text("Save").frame(width: 80)
                     }.buttonStyle(.borderedProminent)
+                    
                 }
                 
             }

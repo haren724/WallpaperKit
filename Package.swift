@@ -16,7 +16,10 @@ let package = Package(
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "WallpaperKit"),
+            name: "WallpaperKit",
+            cSettings: [.define("GL_SILENCE_DEPRECATION")],
+            cxxSettings: [.define("GL_SILENCE_DEPRECATION")],
+            swiftSettings: [.define("GL_SILENCE_DEPRECATION")]),
         .target(
             name: "Common", dependencies: ["WallpaperKit"], path: "Tests/Common"),
 //        .systemLibrary(
@@ -29,7 +32,19 @@ let package = Package(
                 name: "Cglfw",
                 pkgConfig: "glfw3",
                 providers: [
-                    .brew(["glfw"])
+                    .brew(["glfw"]),
+                ]),
+        .systemLibrary(
+                name: "Cglew",
+                pkgConfig: "glew",
+                providers: [
+                    .brew(["glew"]),
+                ]),
+        .systemLibrary(
+                name: "Cglm",
+                pkgConfig: "glm",
+                providers: [
+                    .brew(["glew"]),
                 ]),
         .target(
             name: "GLFWBridge",
@@ -55,11 +70,13 @@ let package = Package(
             ]),
         .testTarget(
             name: "SceneWallpaperTests",
-            dependencies: ["WallpaperKit", "Common", "GLFWBridge"],
+            dependencies: ["WallpaperKit", "Common", "GLFWBridge", "Cglfw", "Cglew", "Cglm"],
             resources: [
                 .process("Resources"),
             ],
-            swiftSettings: [.interoperabilityMode(.Cxx)]),
+            cSettings: [.define("GL_SILENCE_DEPRECATION")],
+            cxxSettings: [.define("GL_SILENCE_DEPRECATION")],
+            swiftSettings: [.interoperabilityMode(.Cxx), .define("GL_SILENCE_DEPRECATION")]),
         
     ]
 )

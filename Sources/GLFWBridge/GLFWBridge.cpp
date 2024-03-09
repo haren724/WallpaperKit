@@ -7,7 +7,7 @@
 
 #include <GLFWBridge.h>
 
-void glfw_start() {
+void glfw_test_start() {
     GLFWwindow* window;
     
     /* Initialize the library */
@@ -23,8 +23,11 @@ void glfw_start() {
     glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
     
+    /* Some basic custom window hint */
+    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); // Collapse the window title bar
+    
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(1280, 720, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(800, 600, "Scene Wallpaper Window", NULL, NULL);
     if (!window) {
         glfwTerminate();
         return -1;
@@ -37,6 +40,8 @@ void glfw_start() {
     while (!glfwWindowShouldClose(window)) {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the buffers
+        
+        
         
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
